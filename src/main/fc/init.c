@@ -104,6 +104,9 @@
 #include "flight/position.h"
 #include "flight/pos_hold.h"
 #include "flight/servos.h"
+#ifdef USE_AUTOTRACK
+#include "flight/autotrack.h"
+#endif
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -1021,6 +1024,10 @@ void initPhase3(void)
 
 #ifdef USE_POSITION_HOLD
     posHoldInit();
+#endif
+
+#ifdef USE_AUTOTRACK
+    autotrackInit();
 #endif
 
 #ifdef USE_GPS_RESCUE

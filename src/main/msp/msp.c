@@ -91,6 +91,9 @@
 #include "flight/position.h"
 #include "flight/rpm_filter.h"
 #include "flight/servos.h"
+#ifdef USE_AUTOTRACK
+#include "flight/autotrack.h"
+#endif
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -619,6 +622,27 @@ static void serializeDataflashReadReply(sbuf_t *dst, uint32_t address, const uin
     }
 }
 #endif // USE_FLASHFS
+
+#ifdef USE_AUTOTRACK
+static mspResult_e mspHandleAutotrackSetCommand(sbuf_t *src)
+{
+    if (sbufBytesRemaining(src) != 8) {
+        return MSP_RESULT_ERROR;
+    }
+
+    autotrackCommand_t command = {
+        .rollRate = sbufReadU16(src),
+        .pitchRate = sbufReadU16(src),
+        .yawRate = sbufReadU16(src),
+        .valid = sbufReadU8(src),
+        .targetLost = sbufReadU8(src),
+    };
+
+    autotrackSetCommand(&command, micros());
+
+    return MSP_RESULT_ACK;
+}
+#endif // USE_AUTOTRACK
 
 /*
  * Returns true if the command was processd, false otherwise.
@@ -4269,6 +4293,11 @@ static mspResult_e mspCommonProcessInCommand(mspDescriptor_t srcDesc, int16_t cm
             batteryConfigMutable()->vbatwarningcellvoltage = sbufReadU16(src);
         }
         break;
+
+#ifdef USE_AUTOTRACK
+    case MSP2_BETAFLIGHT_AUTOTRACK_SET_COMMAND:
+        return mspHandleAutotrackSetCommand(src);
+#endif // USE_AUTOTRACK
 
 #if defined(USE_OSD)
     case MSP_SET_OSD_CONFIG:

@@ -63,6 +63,9 @@
 #include "flight/gps_rescue.h"
 #include "flight/alt_hold.h"
 #include "flight/pos_hold.h"
+#ifdef USE_AUTOTRACK
+#include "flight/autotrack.h"
+#endif
 
 #if defined(USE_DYN_NOTCH_FILTER)
 #include "flight/dyn_notch_filter.h"
@@ -358,6 +361,12 @@ if (crashFlipModeActive) {
         }
 
         if (IS_RC_MODE_ACTIVE(BOXPOSHOLD)) {
+            setArmingDisabled(ARMING_DISABLED_POSHOLD);
+        } else {
+            unsetArmingDisabled(ARMING_DISABLED_POSHOLD);
+        }
+
+        if (IS_RC_MODE_ACTIVE(BOXAUTOTRACK)) {
             setArmingDisabled(ARMING_DISABLED_POSHOLD);
         } else {
             unsetArmingDisabled(ARMING_DISABLED_POSHOLD);
@@ -1077,6 +1086,24 @@ void processRxModes(timeUs_t currentTimeUs)
         }
     } else {
         DISABLE_FLIGHT_MODE(POS_HOLD_MODE);
+    }
+#endif
+
+#ifdef USE_AUTOTRACK
+    if (ARMING_FLAG(ARMED) 
+        && IS_RC_MODE_ACTIVE(BOXAUTOTRACK) 
+        && autotrackPrecheckPassed(currentTimeUs)
+        && wasThrottleRaised()) {
+        if (!FLIGHT_MODE(AUTOTRACK_MODE)) {
+            ENABLE_FLIGHT_MODE(AUTOTRACK_MODE);
+        }
+    } else {
+        DISABLE_FLIGHT_MODE(AUTOTRACK_MODE);
+    }
+    if (!IS_RC_MODE_ACTIVE(BOXAUTOTRACK) ) {
+        if (autotrackDisabledByTargetLoss()) {
+            autotrackReset();
+        }
     }
 #endif
 

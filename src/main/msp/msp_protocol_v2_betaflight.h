@@ -33,6 +33,10 @@
 #define MSP2_MCU_INFO                       0x300C
 #define MSP2_GYRO_SENSOR_ACTIVE             0x300D
 
+#ifdef USE_AUTOTRACK
+#define MSP2_BETAFLIGHT_AUTOTRACK_SET_COMMAND 0x3010
+#endif 
+
 // MSP2_SET_TEXT and MSP2_GET_TEXT variable types
 #define MSP2TEXT_PILOT_NAME                      1
 #define MSP2TEXT_CRAFT_NAME                      2
