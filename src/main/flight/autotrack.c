@@ -101,7 +101,7 @@ float autotrackGetAxisRate(const int axis)
 
 bool autotrackOverrideActive(timeUs_t nowUs)
 {
-    if FLIGHT_MODE(AUTOTRACK_MODE 
+    if (FLIGHT_MODE(AUTOTRACK_MODE) 
         && !FLIGHT_MODE(ANGLE_MODE | HORIZON_MODE | GPS_RESCUE_MODE) 
         && !failsafeIsActive()) {
         if (autotrackTrackingHealthy(nowUs) && !disabledByTargetLoss) {
