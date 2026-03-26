@@ -107,6 +107,9 @@
 #ifdef USE_AUTOTRACK
 #include "flight/autotrack.h"
 #endif
+#ifdef USE_TRACK_ANGLE
+#include "flight/track_angle.h"
+#endif
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -1028,6 +1031,10 @@ void initPhase3(void)
 
 #ifdef USE_AUTOTRACK
     autotrackInit();
+#endif
+
+#ifdef USE_TRACK_ANGLE
+    trackAngleInit();
 #endif
 
 #ifdef USE_GPS_RESCUE

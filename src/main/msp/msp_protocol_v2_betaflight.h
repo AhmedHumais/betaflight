@@ -36,6 +36,9 @@
 #ifdef USE_AUTOTRACK
 #define MSP2_BETAFLIGHT_AUTOTRACK_SET_COMMAND 0x3010
 #endif 
+#ifdef USE_TRACK_ANGLE
+#define MSP2_BETAFLIGHT_TRACK_ANGLE_SET_COMMAND 0x3012
+#endif
 
 // MSP2_SET_TEXT and MSP2_GET_TEXT variable types
 #define MSP2TEXT_PILOT_NAME                      1

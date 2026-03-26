@@ -94,6 +94,9 @@
 #ifdef USE_AUTOTRACK
 #include "flight/autotrack.h"
 #endif
+#ifdef USE_TRACK_ANGLE
+#include "flight/track_angle.h"
+#endif
 
 #include "io/asyncfatfs/asyncfatfs.h"
 #include "io/beeper.h"
@@ -643,6 +646,26 @@ static mspResult_e mspHandleAutotrackSetCommand(sbuf_t *src)
     return MSP_RESULT_ACK;
 }
 #endif // USE_AUTOTRACK
+
+#ifdef USE_TRACK_ANGLE
+static mspResult_e mspHandleTrackAngleSetCommand(sbuf_t *src)
+{
+    if (sbufBytesRemaining(src) != 8) {
+        return MSP_RESULT_ERROR;
+    }
+
+    trackAngleCommand_t command = {
+        .rollError = sbufReadU16(src),
+        .pitchError = sbufReadU16(src),
+        .yawError = sbufReadU16(src),
+        .valid = sbufReadU8(src),
+        .targetLost = sbufReadU8(src),
+    };
+
+    trackAngleSetCommand(&command, micros());
+    return MSP_RESULT_ACK;
+}
+#endif // USE_TRACK_ANGLE
 
 /*
  * Returns true if the command was processd, false otherwise.
@@ -4298,6 +4321,10 @@ static mspResult_e mspCommonProcessInCommand(mspDescriptor_t srcDesc, int16_t cm
     case MSP2_BETAFLIGHT_AUTOTRACK_SET_COMMAND:
         return mspHandleAutotrackSetCommand(src);
 #endif // USE_AUTOTRACK
+#ifdef USE_TRACK_ANGLE
+    case MSP2_BETAFLIGHT_TRACK_ANGLE_SET_COMMAND:
+        return mspHandleTrackAngleSetCommand(src);
+#endif
 
 #if defined(USE_OSD)
     case MSP_SET_OSD_CONFIG:

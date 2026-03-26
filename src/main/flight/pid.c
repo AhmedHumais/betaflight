@@ -50,6 +50,12 @@
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/rpm_filter.h"
+#ifdef USE_TRACK_ANGLE
+#include "flight/track_angle.h"
+#endif
+#ifdef USE_AUTOTRACK
+#include "flight/autotrack.h"
+#endif
 
 #include "io/gps.h"
 
@@ -587,6 +593,13 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
         }
         // limit pilot requested angle to half the autopilot angle to avoid excess speed and chaotic stops
         angleLimit = fminf(0.5f * autopilotConfig()->maxAngle, angleLimit);
+    }
+#endif
+
+#ifdef USE_TRACK_ANGLE
+    angleFeedforward = 0.0f;
+    if (trackAngleOverrideActive(micros())) {
+        angleTarget = trackAngleGetTargetAngleDeg(axis);
     }
 #endif
 
@@ -1313,7 +1326,14 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
 #ifdef USE_CHIRP
         currentPidSetpoint += currentChirp;
 #endif // USE_CHIRP
-        float errorRate = currentPidSetpoint - gyroRate; // r - y
+
+#ifdef USE_AUTOTRACK
+    if (autotrackOverrideActive(micros())) {
+        currentPidSetpoint = autotrackGetAxisRate(axis);
+    }
+#endif
+
+    float errorRate = currentPidSetpoint - gyroRate; // r - y
 #if defined(USE_ACC)
         handleCrashRecovery(
             pidProfile->crash_recovery, angleTrim, axis, currentTimeUs, gyroRate,
@@ -1396,6 +1416,17 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
             pidSetpointDelta = getFeedforward(axis);
         }
 #endif
+#ifdef USE_AUTOTRACK
+        if (autotrackOverrideActive(micros())) {
+                pidSetpointDelta = 0.0f;
+        }            
+#endif
+#ifdef USE_TRACK_ANGLE
+        if (trackAngleOverrideActive(micros())) {
+                pidSetpointDelta = 0.0f;
+        }
+#endif
+
         pidRuntime.previousPidSetpoint[axis] = currentPidSetpoint; // this is the value sent to blackbox, and used for D-max setpoint
 
         // disable D if launch control is active

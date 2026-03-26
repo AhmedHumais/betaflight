@@ -23,7 +23,6 @@ bool autotrackPrecheckPassed(timeUs_t nowUs);
 // void autotrackInvalidate(void);
 bool autotrackOverrideActive(timeUs_t nowUs);
 void autotrackSetCommand(const autotrackCommand_t *command, timeUs_t nowUs);
-float autotrackGetAxisRate(const autotrackCommand_t *command, const int axis);
-const autotrackCommand_t *autotrackGetCommand(void);
+float autotrackGetAxisRate(const int axis);
 
 #endif // USE_AUTOTRACK

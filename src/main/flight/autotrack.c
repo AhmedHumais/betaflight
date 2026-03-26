@@ -3,6 +3,8 @@
 #ifdef USE_AUTOTRACK
 
 #include "flight/autotrack.h"
+#include "flight/failsafe.h"
+
 #include "fc/runtime_config.h"
 #include <string.h>
 
@@ -47,15 +49,7 @@ static bool autotrackTrackingHealthy(timeUs_t nowUs)
 
 static bool autotrackBaseModeIsAcro(void)
 {
-    return !FLIGHT_MODE(ANGLE_MODE)
-        && !FLIGHT_MODE(HORIZON_MODE)
-        && !FLIGHT_MODE(MAG_MODE)
-        && !FLIGHT_MODE(ALT_HOLD_MODE)
-        && !FLIGHT_MODE(POS_HOLD_MODE)
-        && !FLIGHT_MODE(HEADFREE_MODE)
-        && !FLIGHT_MODE(PASSTHRU_MODE)
-        && !FLIGHT_MODE(FAILSAFE_MODE)
-        && !FLIGHT_MODE(GPS_RESCUE_MODE);
+    return !FLIGHT_MODE(ANGLE_MODE | HORIZON_MODE | MAG_MODE | HEADFREE_MODE | PASSTHRU_MODE | FAILSAFE_MODE | GPS_RESCUE_MODE);
 }
 
 static float autotrackDecodeRate(uint16_t encodedRate)
@@ -92,38 +86,24 @@ void autotrackSetCommand(const autotrackCommand_t *command, timeUs_t nowUs)
     autotrackState.hasCommand = true;
 }
 
-// static bool autotrackIsValid(timeUs_t nowUs)
-// {
-//     return autotrackIsFresh(nowUs) && !autotrackState.command.targetLost;
-// }
-
-// void autotrackInvalidate(void)
-// {
-//     autotrackState.command.valid = 0;
-//     autotrackState.command.targetLost = 1;
-// }
-
-const autotrackCommand_t *autotrackGetCommand(void)
-{
-    return &autotrackState.command;
-}
-
-float autotrackGetAxisRate(const autotrackCommand_t *command, const int axis)
+float autotrackGetAxisRate(const int axis)
 {
     switch (axis) {
     case FD_ROLL:
-        return autotrackDecodeRate(command->rollRate);
+        return autotrackDecodeRate(autotrackState.command.rollRate);   
     case FD_PITCH:
-        return autotrackDecodeRate(command->pitchRate);
+        return autotrackDecodeRate(autotrackState.command.pitchRate);
     case FD_YAW:
     default:
-        return autotrackDecodeRate(command->yawRate);
+        return autotrackDecodeRate(autotrackState.command.yawRate);
     }
 }
 
 bool autotrackOverrideActive(timeUs_t nowUs)
 {
-    if FLIGHT_MODE(AUTOTRACK_MODE && !FAILSAFE_MODE){
+    if FLIGHT_MODE(AUTOTRACK_MODE 
+        && !FLIGHT_MODE(ANGLE_MODE | HORIZON_MODE | GPS_RESCUE_MODE) 
+        && !failsafeIsActive()) {
         if (autotrackTrackingHealthy(nowUs) && !disabledByTargetLoss) {
             return true;
         }

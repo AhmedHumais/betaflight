@@ -45,9 +45,6 @@
 #include "flight/gps_rescue.h"
 #include "flight/pid.h"
 #include "flight/pid_init.h"
-#ifdef USE_AUTOTRACK
-#include "flight/autotrack.h"
-#endif
 
 #include "pg/rx.h"
 #include "rx/rx.h"
@@ -104,12 +101,6 @@ static pt1Filter_t feedforwardYawHoldLpf;
 
 float getFeedforward(int axis)
 {
-#ifdef USE_AUTOTRACK
-    if (autotrackOverrideActive(micros())) {
-        UNUSED(axis);
-        return 0.0f;
-    }
-#endif
 #ifdef USE_RC_SMOOTHING_FILTER
     return rxConfig()->rc_smoothing ? feedforwardSmoothed[axis] : feedforwardRaw[axis];
 #else
@@ -124,12 +115,6 @@ static float rcDeflectionSmoothed[3];
 
 float getSetpointRate(int axis)
 {
-#ifdef USE_AUTOTRACK
-    if (autotrackOverrideActive(micros())) {
-        return rawSetpoint[axis];
-    }
-#endif
-
 #ifdef USE_RC_SMOOTHING_FILTER
     return rxConfig()->rc_smoothing ? setpointRate[axis] : rawSetpoint[axis];
 #else
@@ -651,12 +636,6 @@ FAST_CODE void processRcCommand(void)
         DEBUG_SET(DEBUG_RC_SMOOTHING_RATE, 3, updateSmoothing ? 1 : 0);
 #endif
 
-#ifdef USE_AUTOTRACK
-    const timeUs_t nowUs = micros();
-    const bool autotrackActive = autotrackOverrideActive(nowUs);
-    const autotrackCommand_t *autotrackCommand = autotrackActive ? autotrackGetCommand() : NULL;
-#endif
-
         maxRcDeflectionAbs = 0.0f;
 
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
@@ -671,18 +650,6 @@ FAST_CODE void processRcCommand(void)
                 // Treat the stick input as centered to avoid any stick deflection base modifications (like acceleration limit)
                 rcDeflection[axis] = 0;
                 rcDeflectionAbs[axis] = 0;
-            } else
-#endif
-#ifdef USE_AUTOTRACK
-#ifdef USE_GPS_RESCUE
-{}
-#endif
-            if (autotrackActive) 
-            {
-                angleRate = autotrackGetAxisRate(autotrackCommand, axis);
-
-                rcDeflection[axis] = 0.0f;
-                rcDeflectionAbs[axis] = 0.0f;
             } else
 #endif
             {
@@ -700,17 +667,11 @@ FAST_CODE void processRcCommand(void)
 
                 angleRate = applyRates(axis, rcCommandf, rcCommandfAbs);
             }
-
             rawSetpoint[axis] = constrainf(angleRate, -1.0f * currentControlRateProfile->rate_limit[axis], 1.0f * currentControlRateProfile->rate_limit[axis]);
             DEBUG_SET(DEBUG_ANGLERATE, axis, angleRate);
 
 #ifdef USE_FEEDFORWARD
-#ifdef USE_AUTOTRACK
-    if (!autotrackActive)
-#endif
-    {
         calculateFeedforward(&pidRuntime, axis);
-    }
 #endif
             // log the smoothed Rx Rate from non-outliers, this will not show the steps every three valid packets
             DEBUG_SET(DEBUG_RX_TIMING, 5, lrintf(smoothedRxRateHz));
