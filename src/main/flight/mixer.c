@@ -54,6 +54,9 @@
 #include "flight/mixer_tricopter.h"
 #include "flight/pid.h"
 #include "flight/rpm_filter.h"
+#ifdef USE_TRACK_ANGLE
+#include "flight/track_angle.h"
+#endif
 
 #include "io/gps.h"
 
@@ -224,7 +227,15 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
             pidResetIterm();
         }
     } else {
+
+#ifdef USE_TRACK_ANGLE
+        float trackAngleThrottleCorrection = 0.0f;
+        trackAngleThrottleCorrection = trackAngleGetThrottleCompensationNormalized() * (PWM_RANGE_MAX - PWM_RANGE_MIN);
+        throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN + throttleAngleCorrection + trackAngleThrottleCorrection;
+#else
         throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN + throttleAngleCorrection;
+#endif
+
         currentThrottleInputRange = PWM_RANGE;
 #ifdef USE_DYN_IDLE
         if (mixerRuntime.dynIdleMinRps > 0.0f) {

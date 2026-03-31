@@ -21,5 +21,6 @@ void trackAngleSetCommand(const trackAngleCommand_t *command, timeUs_t nowUs);
 bool trackAngleOverrideActive(timeUs_t nowUs);
 float trackAngleGetTargetAngleDeg(int axis);
 
-
+void trackAngleUpdateCurrentAngles(float cur_angle, float tgt_angle, int axis);
+float trackAngleGetThrottleCompensationNormalized(void);
 #endif // USE_TRACK_ANGLE

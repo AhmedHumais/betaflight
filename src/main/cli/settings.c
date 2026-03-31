@@ -108,6 +108,7 @@
 #include "pg/rx_spi_cc2500.h"
 #include "pg/rx_spi_expresslrs.h"
 #include "pg/sdcard.h"
+#include "pg/track_angle.h"
 #include "pg/vcd.h"
 #include "pg/vtx_io.h"
 #include "pg/usb.h"
@@ -1146,6 +1147,14 @@ const clivalue_t valueTable[] = {
     { PARAM_NAME_POS_HOLD_DEADBAND,    VAR_UINT8 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 50 }, PG_POSHOLD_CONFIG, offsetof(posHoldConfig_t, deadband) },
 #endif // !USE_WING
 #endif // USE_POSITION_HOLD
+
+#ifdef USE_TRACK_ANGLE
+    { "track_angle_throttle_comp_enable", VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1 },    PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, throttleCompensationEnable) },
+    { "track_angle_hover_throttle",       VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1000 }, PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, hoverThrottlePermille) },
+    { "track_angle_max_comp",             VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1000 }, PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, maxCompensationPermille) },
+    { "track_angle_min_cos_tilt",         VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1, 1000 }, PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, minCosTiltPermille) },
+    { "track_angle_target_blend",         VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1000 }, PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, targetBlendPermille) },
+#endif
 
 // PG_PID_CONFIG
     { PARAM_NAME_PID_PROCESS_DENOM, VAR_UINT8  | MASTER_VALUE,  .config.minmaxUnsigned = { 1, MAX_PID_PROCESS_DENOM }, PG_PID_CONFIG, offsetof(pidConfig_t, pid_process_denom) },

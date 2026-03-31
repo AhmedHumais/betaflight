@@ -4,6 +4,7 @@ PG_SRC = \
             pg/alt_hold_wing.c \
             pg/autopilot_multirotor.c \
             pg/autopilot_wing.c \
+            pg/track_angle.c \
             pg/beeper.c \
             pg/beeper_dev.c \
             pg/board.c \

@@ -11,11 +11,14 @@
 
 #include "sensors/acceleration.h"
 
+#include "drivers/time.h"
+
 #include "fc/rc_modes.h"
 #include "fc/runtime_config.h"
 
 #include "flight/failsafe.h"
 #include "flight/imu.h"
+#include "pg/track_angle.h"
 
 #define TRACK_ANGLE_TIMEOUT_US      (100000)
 
@@ -26,6 +29,10 @@
 typedef struct trackAngleState_s {
     trackAngleCommand_t command;
     attitudeEulerAngles_t ref_attitude; // in decidegrees
+    float cur_roll_angle_deg; // in degrees
+    float cur_pitch_angle_deg; // in degrees
+    float tgt_roll_angle_deg; // in degrees
+    float tgt_pitch_angle_deg; // in degrees
     timeUs_t lastUpdateUs;
     bool hasCommand;
 } trackAngleState_t;
@@ -111,6 +118,65 @@ float trackAngleGetTargetAngleDeg(int axis)
     default:
         return 0.0f;
     }
+}
+
+void trackAngleUpdateCurrentAngles(float cur_angle, float tgt_angle, int axis)
+{
+    switch (axis)
+    {
+    case FD_ROLL:
+        trackAngleState.cur_roll_angle_deg = cur_angle;
+        trackAngleState.tgt_roll_angle_deg = tgt_angle;
+        break;
+    case FD_PITCH:
+        trackAngleState.cur_pitch_angle_deg = cur_angle;
+        trackAngleState.tgt_pitch_angle_deg = tgt_angle;
+        break;
+    default:
+        return;
+    }
+}
+
+float trackAngleGetThrottleCompensationNormalized(void)
+{
+    const trackAngleConfig_t *cfg = trackAngleConfig();
+
+    if (!cfg->throttleCompensationEnable) {
+        return 0.0f;
+    }
+
+    if (!trackAngleOverrideActive(micros())) {
+        return 0.0f;
+    }
+
+    const float hoverThrottle = constrainf(cfg->hoverThrottlePermille * 0.001f, 0.0f, 1.0f);
+    const float maxComp = constrainf(cfg->maxCompensationPermille * 0.001f, 0.0f, 1.0f);
+    const float minCosTilt = constrainf(cfg->minCosTiltPermille * 0.001f, 0.05f, 1.0f);
+    const float targetBlend = constrainf(cfg->targetBlendPermille * 0.001f, 0.0f, 1.0f);
+
+    const float rollCurrentRad = DEGREES_TO_RADIANS(trackAngleState.cur_roll_angle_deg);
+    const float pitchCurrentRad = DEGREES_TO_RADIANS(trackAngleState.cur_pitch_angle_deg);
+
+    const float rollTargetRad = DEGREES_TO_RADIANS(trackAngleState.tgt_roll_angle_deg);
+    const float pitchTargetRad = DEGREES_TO_RADIANS(trackAngleState.tgt_pitch_angle_deg);
+
+    float cosTiltCurrent = cos_approx(rollCurrentRad) * cos_approx(pitchCurrentRad);
+    float cosTiltTarget = cos_approx(rollTargetRad) * cos_approx(pitchTargetRad);
+
+    if (cosTiltCurrent < minCosTilt) {
+        cosTiltCurrent = minCosTilt;
+    }
+    if (cosTiltTarget < minCosTilt) {
+        cosTiltTarget = minCosTilt;
+    }
+
+    const float extraCurrent = hoverThrottle * ((1.0f / cosTiltCurrent) - 1.0f);
+    const float extraTarget = hoverThrottle * ((1.0f / cosTiltTarget) - 1.0f);
+
+    float extra = (1.0f - targetBlend) * extraCurrent + targetBlend * extraTarget;
+    extra = constrainf(extra, 0.0f, maxComp);
+
+    return extra;
 }
 
 #endif
