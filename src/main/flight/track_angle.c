@@ -214,7 +214,6 @@ static void desAtoAnglesDeg(const float *desA, float *pitchDeg, float *rollDeg)
 
     *pitchDeg = RADIANS_TO_DEGREES(alpha * (ux / rho));
     *rollDeg = RADIANS_TO_DEGREES(-alpha * (uy / rho));
-
 }
 
 static void updateGravityCompensatedTargetAngles(const float throttleCommand)
@@ -284,7 +283,7 @@ bool trackAngleOverrideActive(timeUs_t nowUs)
     else if (FLIGHT_MODE(ANGLE_MODE)
         && !FLIGHT_MODE(HORIZON_MODE | GPS_RESCUE_MODE)
         && !failsafeIsActive()){
-        if (!trackAngleTrackingHealthy(nowUs)) {
+        if (!trackAngleTrackingHealthy(nowUs) || !ARMING_FLAG(ARMED)) {
             trackAngleReset();
             trackAngleState.recycleNeeded = true;
             trackAngleState.enabled = false;

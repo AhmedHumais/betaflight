@@ -853,9 +853,9 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
         break;
     }
 
-// #ifdef USE_TRACK_ANGLE
+#ifdef USE_TRACK_ANGLE
     throttle = trackAngleUpdateCurrentThrust(throttle);
-// #endif
+#endif
 
     if (featureIsEnabled(FEATURE_MOTOR_STOP)
         && ARMING_FLAG(ARMED)
