@@ -19,8 +19,12 @@ void trackAngleInit(void);
 void trackAngleReset(void);
 void trackAngleSetCommand(const trackAngleCommand_t *command, timeUs_t nowUs);
 bool trackAngleOverrideActive(timeUs_t nowUs);
-float trackAngleGetTargetAngleDeg(int axis);
+bool trackAngleModeActive(void);
+bool trackAngleThrottleAngleCompensationActive(void);
 
+float trackAngleGetTargetAngleDeg(int axis);
 void trackAngleUpdateCurrentAngles(float cur_angle, float tgt_angle, int axis);
-float trackAngleGetThrottleCompensationNormalized(void);
+float trackAngleUpdateCurrentThrust(float throttleInput);
+float applyThrottleCompensationForAngle(float throttleInput);
+
 #endif // USE_TRACK_ANGLE

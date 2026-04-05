@@ -1149,6 +1149,7 @@ const clivalue_t valueTable[] = {
 #endif // USE_POSITION_HOLD
 
 #ifdef USE_TRACK_ANGLE
+    { "track_angle_gravity_comp_enable", VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1 },    PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, gravityCompensationEnable) },
     { "track_angle_throttle_comp_enable", VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1 },    PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, throttleCompensationEnable) },
     { "track_angle_hover_throttle",       VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1000 }, PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, hoverThrottlePermille) },
     { "track_angle_max_comp",             VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 1000 }, PG_TRACK_ANGLE_CONFIG, offsetof(trackAngleConfig_t, maxCompensationPermille) },

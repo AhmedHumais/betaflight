@@ -54,9 +54,7 @@
 #include "flight/mixer_tricopter.h"
 #include "flight/pid.h"
 #include "flight/rpm_filter.h"
-#ifdef USE_TRACK_ANGLE
 #include "flight/track_angle.h"
-#endif
 
 #include "io/gps.h"
 
@@ -227,15 +225,14 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
             pidResetIterm();
         }
     } else {
-
 #ifdef USE_TRACK_ANGLE
-        float trackAngleThrottleCorrection = 0.0f;
-        trackAngleThrottleCorrection = trackAngleGetThrottleCompensationNormalized() * (PWM_RANGE_MAX - PWM_RANGE_MIN);
-        throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN + throttleAngleCorrection + trackAngleThrottleCorrection;
-#else
-        throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN + throttleAngleCorrection;
+        if (trackAngleThrottleAngleCompensationActive()){
+            throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN;
+        }else
 #endif
-
+        { 
+        throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN + throttleAngleCorrection;
+        }
         currentThrottleInputRange = PWM_RANGE;
 #ifdef USE_DYN_IDLE
         if (mixerRuntime.dynIdleMinRps > 0.0f) {
@@ -831,6 +828,12 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
     }
 #endif
 
+#ifdef USE_TRACK_ANGLE
+    if (trackAngleThrottleAngleCompensationActive()){
+        throttle = applyThrottleCompensationForAngle(throttle);
+    }
+#endif
+
     motorMixRange = motorMixMax - motorMixMin;
 
     // note that here airmodeEnabled is true also when Launch Control is active
@@ -849,6 +852,10 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
         applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled);
         break;
     }
+
+// #ifdef USE_TRACK_ANGLE
+    throttle = trackAngleUpdateCurrentThrust(throttle);
+// #endif
 
     if (featureIsEnabled(FEATURE_MOTOR_STOP)
         && ARMING_FLAG(ARMED)

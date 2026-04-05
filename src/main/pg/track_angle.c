@@ -8,7 +8,8 @@
 PG_REGISTER_WITH_RESET_TEMPLATE(trackAngleConfig_t, trackAngleConfig, PG_TRACK_ANGLE_CONFIG, 0);
 
 PG_RESET_TEMPLATE(trackAngleConfig_t, trackAngleConfig,
-    .throttleCompensationEnable = 1,
+    .gravityCompensationEnable = 1,
+    .throttleCompensationEnable = 0,
     .hoverThrottlePermille = 350,
     .maxCompensationPermille = 300,
     .minCosTiltPermille = 300,

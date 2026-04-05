@@ -597,8 +597,8 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
 #endif
 
 #ifdef USE_TRACK_ANGLE
-    angleFeedforward = 0.0f;
-    if (trackAngleOverrideActive(micros())) {
+    if (trackAngleModeActive()) {
+        angleFeedforward = 0.0f;
         angleTarget = trackAngleGetTargetAngleDeg(axis);
     }
 #endif
@@ -610,7 +610,7 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
     float angleRate = errorAngle * pidRuntime.angleGain + angleFeedforward;
 
 #ifdef USE_TRACK_ANGLE
-    trackAngleUpdateCurrentAngles(currentAngle, angleTarget,axis);
+    trackAngleUpdateCurrentAngles(currentAngle, angleTarget, axis);
 #endif
 
 
@@ -1427,7 +1427,7 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         }            
 #endif
 #ifdef USE_TRACK_ANGLE
-        if (trackAngleOverrideActive(micros())) {
+        if (trackAngleModeActive()) {
                 pidSetpointDelta = 0.0f;
         }
 #endif
